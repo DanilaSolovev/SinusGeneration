@@ -1,0 +1,27 @@
+--cpu=Cortex-M4.fp.sp
+"sinanother\startup_stm32f407xx.o"
+"sinanother\main.o"
+"sinanother\stm32f4xx_it.o"
+"sinanother\stm32f4xx_hal_msp.o"
+"sinanother\stm32f4xx_hal_dac.o"
+"sinanother\stm32f4xx_hal_dac_ex.o"
+"sinanother\stm32f4xx_hal_rcc.o"
+"sinanother\stm32f4xx_hal_rcc_ex.o"
+"sinanother\stm32f4xx_hal_flash.o"
+"sinanother\stm32f4xx_hal_flash_ex.o"
+"sinanother\stm32f4xx_hal_flash_ramfunc.o"
+"sinanother\stm32f4xx_hal_gpio.o"
+"sinanother\stm32f4xx_hal_dma_ex.o"
+"sinanother\stm32f4xx_hal_dma.o"
+"sinanother\stm32f4xx_hal_pwr.o"
+"sinanother\stm32f4xx_hal_pwr_ex.o"
+"sinanother\stm32f4xx_hal_cortex.o"
+"sinanother\stm32f4xx_hal.o"
+"sinanother\stm32f4xx_hal_exti.o"
+"sinanother\stm32f4xx_hal_tim.o"
+"sinanother\stm32f4xx_hal_tim_ex.o"
+"sinanother\system_stm32f4xx.o"
+--strict --scatter "SinAnother\SinAnother.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "SinAnother.map" -o SinAnother\SinAnother.axf
