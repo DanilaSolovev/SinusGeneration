@@ -31,7 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define NS  128*3
+#define NS  128
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,21 +47,10 @@ DMA_HandleTypeDef hdma_dac1;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim8;
 
 /* USER CODE BEGIN PV */
-//uint32_t Sin[NS] = {
-//    2048, 2149, 2250, 2350, 2450, 2549, 2646, 2742, 2837, 2929, 3020, 3108, 3193, 3275, 3355,
-//    3431, 3504, 3574, 3639, 3701, 3759, 3812, 3861, 3906, 3946, 3982, 4013, 4039, 4060, 4076,
-//    4087, 4094, 4095, 4091, 4082, 4069, 4050, 4026, 3998, 3965, 3927, 3884, 3837, 3786, 3730,
-//    3671, 3607, 3539, 3468, 3394, 3316, 3235, 3151, 3064, 2975, 2883, 2790, 2695, 2598, 2500,
-//    2400, 2300, 2199, 2098, 1997, 1896, 1795, 1695, 1595, 1497, 1400, 1305, 1212, 1120, 1031,
-//    944, 860, 779, 701, 627, 556, 488, 424, 365, 309, 258, 211, 168, 130, 97,
-//    69, 45, 26, 13, 4, 0, 1, 8, 19, 35, 56, 82, 113, 149, 189,
-//    234, 283, 336, 394, 456, 521, 591, 664, 740, 820, 902, 987, 1075, 1166, 1258,
-//    1353, 1449, 1546, 1645, 1745, 1845, 1946, 2047
-//};
-uint16_t ADC_Data = 0;
-const uint32_t Bark[NS] = {
+uint32_t Sin[NS] = {
     2048, 2149, 2250, 2350, 2450, 2549, 2646, 2742, 2837, 2929, 3020, 3108, 3193, 3275, 3355,
     3431, 3504, 3574, 3639, 3701, 3759, 3812, 3861, 3906, 3946, 3982, 4013, 4039, 4060, 4076,
     4087, 4094, 4095, 4091, 4082, 4069, 4050, 4026, 3998, 3965, 3927, 3884, 3837, 3786, 3730,
@@ -70,18 +59,9 @@ const uint32_t Bark[NS] = {
     944, 860, 779, 701, 627, 556, 488, 424, 365, 309, 258, 211, 168, 130, 97,
     69, 45, 26, 13, 4, 0, 1, 8, 19, 35, 56, 82, 113, 149, 189,
     234, 283, 336, 394, 456, 521, 591, 664, 740, 820, 902, 987, 1075, 1166, 1258,
-    1353, 1449, 1546, 1645, 1745, 1845, 1946, 2047,
-    
-    2048, 2149, 2250, 2350, 2450, 2549, 2646, 2742, 2837, 2929, 3020, 3108, 3193, 3275, 3355,
-    3431, 3504, 3574, 3639, 3701, 3759, 3812, 3861, 3906, 3946, 3982, 4013, 4039, 4060, 4076,
-    4087, 4094, 4095, 4091, 4082, 4069, 4050, 4026, 3998, 3965, 3927, 3884, 3837, 3786, 3730,
-    3671, 3607, 3539, 3468, 3394, 3316, 3235, 3151, 3064, 2975, 2883, 2790, 2695, 2598, 2500,
-    2400, 2300, 2199, 2098, 1997, 1896, 1795, 1695, 1595, 1497, 1400, 1305, 1212, 1120, 1031,
-    944, 860, 779, 701, 627, 556, 488, 424, 365, 309, 258, 211, 168, 130, 97,
-    69, 45, 26, 13, 4, 0, 1, 8, 19, 35, 56, 82, 113, 149, 189,
-    234, 283, 336, 394, 456, 521, 591, 664, 740, 820, 902, 987, 1075, 1166, 1258,
-    1353, 1449, 1546, 1645, 1745, 1845, 1946, 2047,
-    
+    1353, 1449, 1546, 1645, 1745, 1845, 1946, 2047
+};
+uint32_t Cos[NS] = {
     2047, 1946, 1845, 1745, 1645, 1546, 1449, 1353, 1258, 1166, 1075, 987, 902, 820, 740, 664, 
     591, 521, 456, 394, 336, 283, 234, 189, 149, 113, 82, 56, 35, 19, 8, 1, 0, 4, 13, 26, 45,
     69, 97, 130, 168, 211, 258, 309, 365, 424, 488, 556, 627, 701, 779, 860, 944, 1031, 1120,
@@ -91,6 +71,9 @@ const uint32_t Bark[NS] = {
     4039, 4013, 3982, 3946, 3906, 3861, 3812, 3759, 3701, 3639, 3574, 3504, 3431, 3355, 3275,
     3193, 3108, 3020, 2929, 2837, 2742, 2646, 2549, 2450, 2350, 2250, 2149, 2048
 };
+int16_t buff[NS*5*3];
+int16_t ADC_Data = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,6 +84,7 @@ static void MX_DAC_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM8_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -143,18 +127,22 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM1_Init();
   MX_ADC1_Init();
+  MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
   
-  HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, 128*3, DAC_ALIGN_12B_R);
+  
   HAL_TIM_Base_Start(&htim2);
-  HAL_ADC_Start_IT(&hadc1);
-  //HAL_TIM_Base_Start_IT(&htim1);
+ 
+  HAL_ADC_Start(&hadc1);
+  HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start_IT(&htim8);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+      HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -315,7 +303,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 36;
+  htim1.Init.Period = 7999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -361,7 +349,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 36;
+  htim2.Init.Period = 12;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -382,6 +370,52 @@ static void MX_TIM2_Init(void)
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
+  * @brief TIM8 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM8_Init(void)
+{
+
+  /* USER CODE BEGIN TIM8_Init 0 */
+
+  /* USER CODE END TIM8_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM8_Init 1 */
+
+  /* USER CODE END TIM8_Init 1 */
+  htim8.Instance = TIM8;
+  htim8.Init.Prescaler = 0;
+  htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim8.Init.Period = 12;
+  htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim8.Init.RepetitionCounter = 0;
+  htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim8, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim8, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM8_Init 2 */
+
+  /* USER CODE END TIM8_Init 2 */
 
 }
 
@@ -427,29 +461,51 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc1)
+//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc1)
 
-{
+//{
 
-  ADC_Data = HAL_ADC_GetValue(hadc1);
+//  ADC_Data = HAL_ADC_GetValue(hadc1);
 
-}
+//}
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance==TIM1) //check if the interrupt comes from TIM1
     {
-//        static uint32_t i = 0;
-//        if(i==0||i==1)
-//        {
-//            HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Sin, 128, DAC_ALIGN_12B_R);
-//        }
-//        else if (i==2)
-//        {
-//            HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Cos, 128, DAC_ALIGN_12B_R);
-//        }
-//        i++;
-//        if (i==3){i=0;}
-        //HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Sin, 128, DAC_ALIGN_12B_R);
+        static uint8_t i=0;
+        HAL_DAC_Stop_DMA(&hdac, DAC_CHANNEL_1);
+        
+        
+        switch (i)
+        {
+            case 0:
+            HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Sin, 128, DAC_ALIGN_12B_R);
+            break;
+            case 1:
+            HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Sin, 128, DAC_ALIGN_12B_R);
+            break;
+            case 2:
+            HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Sin, 128, DAC_ALIGN_12B_R);
+            break;
+            default:
+            break;   
+        }       
+        
+        i++;
+        if(i==3){i=0;}
+        
+    }
+    if (htim->Instance==TIM8)
+    {
+        static int16_t num = 0;
+        
+        if(num<(NS*5*3))
+        {
+            ADC_Data = (HAL_ADC_GetValue(&hadc1)-2048);
+            buff[num]=ADC_Data;
+            num++;
+        }
+        
     }
 }
 /* USER CODE END 4 */
