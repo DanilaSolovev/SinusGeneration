@@ -34,6 +34,7 @@
 /* USER CODE BEGIN PD */
 #define NS  128
 #define BigFKNmas 1152
+#define ADCIn 1500
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -105,11 +106,6 @@ const uint16_t Bark[BigFKNmas] = {
     234, 283, 336, 394, 456, 521, 591, 664, 740, 820, 902, 987, 1075, 1166, 1258,
     1353, 1449, 1546, 1645, 1745, 1845, 1946, 2047,
     
-    
-    
-    
-    
-    
     2048, 2149, 2250, 2350, 2450, 2549, 2646, 2742, 2837, 2929, 3020, 3108, 3193, 3275, 3355,
     3431, 3504, 3574, 3639, 3701, 3759, 3812, 3861, 3906, 3946, 3982, 4013, 4039, 4060, 4076,
     4087, 4094, 4095, 4091, 4082, 4069, 4050, 4026, 3998, 3965, 3927, 3884, 3837, 3786, 3730,
@@ -145,14 +141,7 @@ const uint16_t Bark[BigFKNmas] = {
     
     
     
-    2047, 1946, 1845, 1745, 1645, 1546, 1449, 1353, 1258, 1166, 1075, 987, 902, 820, 740, 664, 
-    591, 521, 456, 394, 336, 283, 234, 189, 149, 113, 82, 56, 35, 19, 8, 1, 0, 4, 13, 26, 45,
-    69, 97, 130, 168, 211, 258, 309, 365, 424, 488, 556, 627, 701, 779, 860, 944, 1031, 1120,
-    1212, 1305, 1400, 1497, 1595, 1695, 1795, 1896, 1997, 2098, 2199, 2300, 2400, 2500, 2598,
-    2695, 2790, 2883, 2975, 3064, 3151, 3235, 3316, 3394, 3468, 3539, 3607, 3671, 3730, 3786,
-    3837, 3884, 3927, 3965, 3998, 4026, 4050, 4069, 4082, 4091, 4095, 4094, 4087, 4076, 4060,
-    4039, 4013, 3982, 3946, 3906, 3861, 3812, 3759, 3701, 3639, 3574, 3504, 3431, 3355, 3275,
-    3193, 3108, 3020, 2929, 2837, 2742, 2646, 2549, 2450, 2350, 2250, 2149, 2048,
+    
     
     2047, 1946, 1845, 1745, 1645, 1546, 1449, 1353, 1258, 1166, 1075, 987, 902, 820, 740, 664, 
     591, 521, 456, 394, 336, 283, 234, 189, 149, 113, 82, 56, 35, 19, 8, 1, 0, 4, 13, 26, 45,
@@ -171,13 +160,24 @@ const uint16_t Bark[BigFKNmas] = {
     3837, 3884, 3927, 3965, 3998, 4026, 4050, 4069, 4082, 4091, 4095, 4094, 4087, 4076, 4060,
     4039, 4013, 3982, 3946, 3906, 3861, 3812, 3759, 3701, 3639, 3574, 3504, 3431, 3355, 3275,
     3193, 3108, 3020, 2929, 2837, 2742, 2646, 2549, 2450, 2350, 2250, 2149, 2048,
+    
+    2047, 1946, 1845, 1745, 1645, 1546, 1449, 1353, 1258, 1166, 1075, 987, 902, 820, 740, 664, 
+    591, 521, 456, 394, 336, 283, 234, 189, 149, 113, 82, 56, 35, 19, 8, 1, 0, 4, 13, 26, 45,
+    69, 97, 130, 168, 211, 258, 309, 365, 424, 488, 556, 627, 701, 779, 860, 944, 1031, 1120,
+    1212, 1305, 1400, 1497, 1595, 1695, 1795, 1896, 1997, 2098, 2199, 2300, 2400, 2500, 2598,
+    2695, 2790, 2883, 2975, 3064, 3151, 3235, 3316, 3394, 3468, 3539, 3607, 3671, 3730, 3786,
+    3837, 3884, 3927, 3965, 3998, 4026, 4050, 4069, 4082, 4091, 4095, 4094, 4087, 4076, 4060,
+    4039, 4013, 3982, 3946, 3906, 3861, 3812, 3759, 3701, 3639, 3574, 3504, 3431, 3355, 3275,
+    3193, 3108, 3020, 2929, 2837, 2742, 2646, 2549, 2450, 2350, 2250, 2149, 2048
     
     
 };
-int16_t buff[BigFKNmas];
+int16_t buff[ADCIn];
 int16_t ADC_Data = 0;
 uint16_t a = 0;
 uint16_t num = 0;
+volatile int32_t corr = 0;
+volatile float distance =0.0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -190,7 +190,7 @@ static void MX_TIM1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM8_Init(void);
 /* USER CODE BEGIN PFP */
-
+void autocorr(int16_t *mas1,const uint16_t *mas2);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -233,17 +233,15 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
-//  for(int i = 0; i < 64; i++) {
-//    sine[i] = 2048 + (int16_t)(round(2047.0 * sin((i * 3.1415927* 2.0) / (64.0))));
-//  }
+
   
   HAL_TIM_Base_Start(&htim2);
   HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, BigFKNmas, DAC_ALIGN_12B_R);
-  //HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Sin, NS, DAC_ALIGN_12B_R);
-  //HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)sine, 64, DAC_ALIGN_12B_R);
   HAL_ADC_Start_IT(&hadc1);
-  HAL_TIM_Base_Start_IT(&htim1);
+  
   HAL_TIM_Base_Start(&htim8);
+  //HAL_TIM_Base_Start_IT(&htim1);
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -251,6 +249,10 @@ int main(void)
   while (1)
   {
       HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
+      if(num==ADCIn)
+      {
+          autocorr(buff,Bark);
+      }
       HAL_Delay(1000);
     /* USER CODE END WHILE */
 
@@ -417,7 +419,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 9;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 7999;
+  htim1.Init.Period = 9599;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -575,12 +577,40 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+//                        buff Bark
+void autocorr(int16_t *mas1,const uint16_t *mas2)
+{
+    
+   
+    corr = 0;
+    int32_t maxcorr = 0;
+    
+    volatile int32_t ans = 0;
+    
+    volatile int32_t sdig = 0;
+    for(uint16_t t = 0; t<ADCIn; t++)
+    {
+        volatile int32_t vnutr = 0;
+        for(volatile uint16_t i = 0;i<BigFKNmas;i++)
+        {
+            sdig = i+t;
+            if(sdig<ADCIn)
+            {
+            vnutr=vnutr+(-buff[sdig])*((int16_t)Bark[i]-2048);
+            }
+        }
+        corr = vnutr;
+        if(corr>maxcorr){maxcorr=corr;ans=t;}
+    }
+    //ans=ans+1;
+    distance=0.00052*(float)ans;
+}
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
 {
 if(hadc->Instance == ADC1) //check if the interrupt comes from ACD1
     {
-            if(num<(BigFKNmas))
+            if(num<(ADCIn))
             {
                 //ADC_Data = (HAL_ADC_GetValue(&hadc1)-2048);
                 buff[num]=(HAL_ADC_GetValue(&hadc1)-2048);
@@ -593,7 +623,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance==TIM1)
     {
-       
+       num=0;
+       HAL_TIM_Base_Start(&htim8);
         
         
         
