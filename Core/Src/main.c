@@ -151,7 +151,7 @@ int16_t ADC_Data = 0;
 uint16_t a = 0;
 uint16_t num = 0;
 volatile int32_t corr = 0;
-volatile float distance =0.0;
+volatile uint16_t distance =0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -227,7 +227,6 @@ int main(void)
       {
           autocorr(buff,Bark);
       }
-      HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -391,9 +390,9 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 9;
+  htim1.Init.Prescaler = 9999;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 9599;
+  htim1.Init.Period = 55999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -557,9 +556,11 @@ void autocorr(int16_t *mas1,const uint16_t *mas2)
     
    
     corr = 0;
-    int32_t maxcorr = 0;
+    volatile int32_t maxcorr = 0;
+    maxcorr =0;
     
     volatile int32_t ans = 0;
+    ans = 0;
     
     volatile int32_t sdig = 0;
     for(uint16_t t = 0; t<ADCIn; t++)
@@ -570,14 +571,15 @@ void autocorr(int16_t *mas1,const uint16_t *mas2)
             sdig = i+t;
             if(sdig<ADCIn)
             {
-            vnutr=vnutr+(-buff[sdig])*((int16_t)Bark[i]-2048);
+            //vnutr=vnutr+(-buff[sdig])*((int16_t)Bark[i]-2048);
+            vnutr=vnutr+(-mas1[sdig])*((int16_t)mas2[i]-2048); 
             }
         }
         corr = vnutr;
         if(corr>maxcorr){maxcorr=corr;ans=t;}
     }
     //ans=ans+1;
-    distance=0.00052*(float)ans;
+    distance=(52*ans)/100;
 }
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
@@ -590,7 +592,10 @@ if(hadc->Instance == ADC1) //check if the interrupt comes from ACD1
                 buff[num]=(HAL_ADC_GetValue(&hadc1)-2048);
                 num++;
             }
-            else{HAL_TIM_Base_Stop(&htim8);}
+            else
+            {
+            HAL_ADC_Stop_IT(&hadc1);
+            }
     }
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -598,8 +603,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (htim->Instance==TIM1)
     {
        num=0;
-       HAL_TIM_Base_Start(&htim8);
-        
+       HAL_ADC_Start_IT(&hadc1);
         
         
     }
