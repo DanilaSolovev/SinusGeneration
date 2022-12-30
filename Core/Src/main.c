@@ -214,7 +214,7 @@ int main(void)
   HAL_ADC_Start_IT(&hadc1);
   
   HAL_TIM_Base_Start(&htim8);
-  //HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start_IT(&htim1);
   
   /* USER CODE END 2 */
 
@@ -227,6 +227,7 @@ int main(void)
       {
           autocorr(buff,Bark);
       }
+      HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -392,7 +393,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 9999;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 55999;
+  htim1.Init.Period = 7999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -571,7 +572,6 @@ void autocorr(int16_t *mas1,const uint16_t *mas2)
             sdig = i+t;
             if(sdig<ADCIn)
             {
-            //vnutr=vnutr+(-buff[sdig])*((int16_t)Bark[i]-2048);
             vnutr=vnutr+(-mas1[sdig])*((int16_t)mas2[i]-2048); 
             }
         }
@@ -588,13 +588,18 @@ if(hadc->Instance == ADC1) //check if the interrupt comes from ACD1
     {
             if(num<(ADCIn))
             {
-                //ADC_Data = (HAL_ADC_GetValue(&hadc1)-2048);
                 buff[num]=(HAL_ADC_GetValue(&hadc1)-2048);
                 num++;
             }
             else
             {
+            //HAL_ADC_Stop_IT(&hadc1);
+            // Тест
+            HAL_TIM_Base_Stop(&htim2);
+            HAL_DAC_Stop_DMA(&hdac, DAC_CHANNEL_1);
             HAL_ADC_Stop_IT(&hadc1);
+  
+            HAL_TIM_Base_Stop(&htim8);
             }
     }
 }
@@ -603,8 +608,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (htim->Instance==TIM1)
     {
        num=0;
+       //HAL_ADC_Start_IT(&hadc1);
+       // Тест
+       HAL_TIM_Base_Start(&htim2);
+       HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, BigFKNmas, DAC_ALIGN_12B_R);
        HAL_ADC_Start_IT(&hadc1);
-        
+  
+       HAL_TIM_Base_Start(&htim8);
         
     }
 }
