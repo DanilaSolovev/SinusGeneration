@@ -52,6 +52,8 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim8;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 uint16_t sine[NS];
 uint16_t Sin[NS] = {
@@ -151,7 +153,7 @@ int16_t ADC_Data = 0;
 uint16_t a = 0;
 uint16_t num = 0;
 volatile int32_t corr = 0;
-volatile uint16_t distance =0;
+uint8_t distance =0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -163,6 +165,7 @@ static void MX_TIM2_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM8_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void autocorr(int16_t *mas1,const uint16_t *mas2);
 /* USER CODE END PFP */
@@ -206,6 +209,7 @@ int main(void)
   MX_TIM1_Init();
   MX_ADC1_Init();
   MX_TIM8_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   
@@ -510,6 +514,39 @@ static void MX_TIM8_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -580,6 +617,7 @@ void autocorr(int16_t *mas1,const uint16_t *mas2)
     }
     //ans=ans+1;
     distance=(52*ans)/100;
+    HAL_UART_Transmit(&huart1,&distance, 1, 1000);
 }
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 

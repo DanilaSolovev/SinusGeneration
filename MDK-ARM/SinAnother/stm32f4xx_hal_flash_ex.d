@@ -34,3 +34,4 @@ sinanother\stm32f4xx_hal_flash_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4
 sinanother\stm32f4xx_hal_flash_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 sinanother\stm32f4xx_hal_flash_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 sinanother\stm32f4xx_hal_flash_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
+sinanother\stm32f4xx_hal_flash_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h

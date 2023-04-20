@@ -23,6 +23,7 @@
 "sinanother\stm32f4xx_hal_dac_ex.o"
 "sinanother\stm32f4xx_hal_tim.o"
 "sinanother\stm32f4xx_hal_tim_ex.o"
+"sinanother\stm32f4xx_hal_uart.o"
 "sinanother\system_stm32f4xx.o"
 --strict --scatter "SinAnother\SinAnother.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
