@@ -336,6 +336,7 @@ int main(void)
       if(num==ADCIn)
       {
           autocorr(buff,Bark);
+          num=ADCIn+1;
           HAL_UART_Transmit(&huart1,&distance, 1, 1000);
       }
     /* USER CODE END WHILE */
@@ -699,12 +700,9 @@ void autocorr(int16_t *mas1,const uint16_t *mas2)
 {
     
    
-    //corr = 0;
     volatile int32_t maxcorr = 0;
-    //maxcorr =0;
     
     volatile int32_t ans = 0;
-    //ans = 0;
     
     volatile int32_t sdig = 0;
     for(uint16_t t = 0; t<ADCIn; t++)
@@ -736,7 +734,7 @@ if(hadc->Instance == ADC1) //check if the interrupt comes from ACD1
             }
             else
             {
-            //HAL_ADC_Stop_IT(&hadc1);
+            
             // Тест
             HAL_TIM_Base_Stop(&htim2);
             HAL_DAC_Stop_DMA(&hdac, DAC_CHANNEL_1);
