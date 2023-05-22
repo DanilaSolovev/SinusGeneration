@@ -259,7 +259,8 @@ int16_t ADC_Data = 0;
 uint16_t a = 0;
 uint16_t num = 0;
 volatile int32_t corr = 0;
-uint8_t distance =0;
+uint8_t distance = 0;
+uint8_t speakerNum = 1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -317,13 +318,26 @@ int main(void)
   MX_TIM8_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
   
+//  for(int i = 0; i < 64; i++) 
+//  {
+//    sine[i] = 2048 + (int16_t)(round(2047.0 * sin((i * 3.1415927) / (64*2.0))));
+//  }
+
+  //Включаем первый динамик
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
+  
+  //�?нициализируем DMA
   HAL_TIM_Base_Start(&htim2);
   HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, BigFKNmas, DAC_ALIGN_12B_R);
-  HAL_ADC_Start_IT(&hadc1);
   
+  //�?нициализируем ADC
+  HAL_ADC_Start_IT(&hadc1);
   HAL_TIM_Base_Start(&htim8);
+  
+  //Включаем таймер, который отвечает за частоту измерения расстояний
   HAL_TIM_Base_Start_IT(&htim1);
   
   /* USER CODE END 2 */
@@ -504,7 +518,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 9999;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 1999;
+  htim1.Init.Period = 3999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -680,10 +694,21 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PC1 PC2 PC3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA6 */
   GPIO_InitStruct.Pin = GPIO_PIN_6;
@@ -719,7 +744,6 @@ void autocorr(int16_t *mas1,const uint16_t *mas2)
         corr = vnutr;
         if(corr>maxcorr){maxcorr=corr;ans=t;}
     }
-    //ans=ans+1;
     distance=(52*ans)/100;
 }
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
@@ -727,6 +751,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 if(hadc->Instance == ADC1) //check if the interrupt comes from ACD1
     {
+            //Заполняем массив значениями с микрофона
             if(num<(ADCIn))
             {
                 buff[num]=(HAL_ADC_GetValue(&hadc1)-2048);
@@ -734,12 +759,16 @@ if(hadc->Instance == ADC1) //check if the interrupt comes from ACD1
             }
             else
             {
-            
-            // Тест
+                
+            //Приостанавливаем передачу и прием данных
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
+                
             HAL_TIM_Base_Stop(&htim2);
             HAL_DAC_Stop_DMA(&hdac, DAC_CHANNEL_1);
+            
             HAL_ADC_Stop_IT(&hadc1);
-  
             HAL_TIM_Base_Stop(&htim8);
             }
     }
@@ -749,13 +778,34 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (htim->Instance==TIM1)
     {
        num=0;
+        
+       //Переключаем светодиод для индикации следующего замера
        HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
-       //HAL_ADC_Start_IT(&hadc1);
-       // Тест
+        
+       //Включаем необходимый динамик
+       switch(speakerNum)
+       {
+       case 0:
+           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
+           break;
+       case 1:
+           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+           break;
+       case 2:
+           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+           break;
+       default :
+           break;
+       }
+       
+       speakerNum++;
+       if (speakerNum > 2){speakerNum = 0;}
+        
+       //Повторно запускаем DMA
        HAL_TIM_Base_Start(&htim2);
        HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, BigFKNmas, DAC_ALIGN_12B_R);
+       //Повторно запускаем ADC
        HAL_ADC_Start_IT(&hadc1);
-  
        HAL_TIM_Base_Start(&htim8);
         
     }
