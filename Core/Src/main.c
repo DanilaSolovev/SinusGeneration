@@ -62,6 +62,7 @@ uint16_t num = 0;
 volatile int32_t corr = 0;
 volatile uint16_t distance = 0;
 uint8_t speakerNum = 1;
+unsigned char a, buf[3];
 //volatile int32_t debug1 = 0; 
 /* USER CODE END PV */
 
@@ -159,8 +160,22 @@ int main(void)
 //              HAL_Delay(10);
 //          }
           autocorr(buff,Bark);
-          num=ADCIn+1;
-          //HAL_UART_Transmit(&huart1,&distance, 1, 1000);
+          num++;
+          for( a=0; a<3; a++ ) buf[a] = '0';
+          uint8_t sizeoftransmit = 3;
+          while( distance>=100 )     { buf[0]++; distance = distance-100; }
+          while( distance>=10 )       { buf[1]++; distance = distance-10; }
+          buf[2] += distance;
+          
+          if(buf[0]=='0')
+          {
+              a--;
+              buf[0] = buf[1];
+              buf[1] = buf[0];
+          }
+      
+          
+          HAL_UART_Transmit(&huart1,(uint8_t*)buf, a, 1000);
       }
     /* USER CODE END WHILE */
 
@@ -656,9 +671,9 @@ if(hadc->Instance == ADC1) //check if the interrupt comes from ACD1
             {
                 
             //Приостанавливаем передачу и прием данных
-//            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
-//            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
-//            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
                 
             //HAL_DAC_Stop_DMA(&hdac, DAC_CHANNEL_1);
             HAL_ADC_Stop_IT(&hadc1);
@@ -675,23 +690,23 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
        HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
         
        //Включаем необходимый динамик
-//       switch(speakerNum)
-//       {
-//       case 0:
-//           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
-//           break;
-//       case 1:
-//           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
-//           break;
-//       case 2:
-//           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
-//           break;
-//       default :
-//           break;
-//       }
-//       
-//       speakerNum++;
-//       if (speakerNum > 2){speakerNum = 0;}
+       switch(speakerNum)
+       {
+       case 0:
+           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
+           break;
+       case 1:
+           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+           break;
+       case 2:
+           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+           break;
+       default :
+           break;
+       }
+       
+       speakerNum++;
+       if (speakerNum > 2){speakerNum = 0;}
         
        //Повторно запускаем DMA
        HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, BigFKNmas, DAC_ALIGN_12B_R);

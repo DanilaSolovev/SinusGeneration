@@ -50,11 +50,12 @@ fclose(fid);
 plot(ts,x,'black','LineWidth',1), grid on, hold on;
 plot(ts,fm,'--black','LineWidth',2), grid on;
 title ('BPSK модуляция');
+ylim([-2 2]);
 xlabel('Время, сек'), ylabel('Амплитуда');
 legend({'Модулированный сигнал';'Модулирующий сигнал'});
 
 % Вычисление автокорреляционной функции с помощью функции myAutocorr
-autocorr = Autocorr(fm);
+autocorr = Autocorr(x);
 
 % Создание оси времени
 time = -(length(x)-1):(length(x)-1);
@@ -65,3 +66,4 @@ stem(time, autocorr,'.',"black",'LineWidth',0.5);
 xlabel('Смещение');
 ylabel('Автокорреляция');
 title('Функция автокорреляции');
+grid on;
