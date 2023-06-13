@@ -34,9 +34,9 @@ def trilaterate(p1, p2, p3, d1, d2, d3):
 fig, ax = plt.subplots()
 
 # Отображение известных точек
-ax.plot(point1[0], point1[1], 'ro', label='Динамик 1')
+ax.plot(point1[0], point1[1], 'rs', label='Динамик 1')
 ax.plot(point2[0], point2[1], 'bo', label='Динамик 2')
-ax.plot(point3[0], point3[1], 'go', label='Динамик 3')
+ax.plot(point3[0], point3[1], 'g^', label='Динамик 3')
 
 # Отображение орбит
 circle1 = Circle(point1, 0, fill=False, color='r')
@@ -74,6 +74,12 @@ def update_plot(distances):
 while True:
     # Чтение расстояний от UART порта
     distances = []
+    while True:
+        start=ser.readline()
+        start = start.decode('utf8')
+        if start == 's\n':
+            print('start of conv\n')
+            break
     while len(distances) < 3:
         
         if ser.in_waiting > 0:
@@ -91,7 +97,7 @@ while True:
     update_plot(distances)
 
     # Пауза в 1 секунду
-    time.sleep(0.5)
+    #time.sleep(0.1)
 
 # Закрыть соединение с UART портом
 ser.close()

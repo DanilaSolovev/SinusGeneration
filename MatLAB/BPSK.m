@@ -2,12 +2,12 @@ clear, clc, close all
 
 load('BarkerCodes.mat');
 % кодируемая последовательность
-code = barker7;
+code = barker3;
 % количество отсчетов одного периода синуса
 m = 32;
 % длительность импульса в периодах синусойды
 num_of_periods_per_bit = 1;
-% частота сигнала
+% частота сигнала в Гц
 fc = 5000;
 
 fs = fc*m;
@@ -16,7 +16,7 @@ N = length(ts);
 
 
 sinus = sin(2*pi*fc*ts);
-
+    
 % длина одного бита в отсчётах
 
 n_for_bit = m*num_of_periods_per_bit;
@@ -43,7 +43,7 @@ ARR = round((80*10^6)/(fs))-1;
 fprintf(fid, 'Значение ARR (при частоте тактирования шины 80 МГц): %d \n', ARR);
 fprintf(fid, 'Количество элементов в массиве: %d \n\n', length(x));
 % запись отсчетов для 12 разрядного DAC в текстовый файл
-dlmwrite(filename, round(2048*x)+2048,'-append', 'delimiter', ',');
+dlmwrite(filename, round(1736*x)+1736,'-append', 'delimiter', ',');
 fclose(fid);
 
 % построение графиков

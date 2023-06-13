@@ -33,8 +33,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define NS  24
-#define BigFKNmas 224
-#define ADCIn 700
+#define BigFKNmas 96 
+#define ADCIn 300
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -56,14 +56,14 @@ TIM_HandleTypeDef htim8;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-const uint32_t Bark[BigFKNmas] = {2048,2448,2832,3186,3496,3751,3940,4057,4096,4057,3940,3751,3496,3186,2832,2448,2048,1648,1264,910,600,345,156,39,0,39,156,345,600,910,1264,1648,2048,2448,2832,3186,3496,3751,3940,4057,4096,4057,3940,3751,3496,3186,2832,2448,2048,1648,1264,910,600,345,156,39,0,39,156,345,600,910,1264,1648,2048,2448,2832,3186,3496,3751,3940,4057,4096,4057,3940,3751,3496,3186,2832,2448,2048,1648,1264,910,600,345,156,39,0,39,156,345,600,910,1264,1648,2048,1648,1264,910,600,345,156,39,0,39,156,345,600,910,1264,1648,2048,2448,2832,3186,3496,3751,3940,4057,4096,4057,3940,3751,3496,3186,2832,2448,2048,1648,1264,910,600,345,156,39,0,39,156,345,600,910,1264,1648,2048,2448,2832,3186,3496,3751,3940,4057,4096,4057,3940,3751,3496,3186,2832,2448,2048,2448,2832,3186,3496,3751,3940,4057,4096,4057,3940,3751,3496,3186,2832,2448,2048,1648,1264,910,600,345,156,39,0,39,156,345,600,910,1264,1648,2048,1648,1264,910,600,345,156,39,0,39,156,345,600,910,1264,1648,2048,2448,2832,3186,3496,3751,3940,4057,4096,4057,3940,3751,3496,3186,2832,2448};
+const uint32_t Bark[BigFKNmas] = {1736,2075,2400,2700,2964,3179,3340,3439,3472,3439,3340,3179,2964,2700,2400,2075,1736,1397,1072,772,508,293,132,33,0,33,132,293,508,772,1072,1397,1736,2075,2400,2700,2964,3179,3340,3439,3472,3439,3340,3179,2964,2700,2400,2075,1736,1397,1072,772,508,293,132,33,0,33,132,293,508,772,1072,1397,1736,1397,1072,772,508,293,132,33,0,33,132,293,508,772,1072,1397,1736,2075,2400,2700,2964,3179,3340,3439,3472,3439,3340,3179,2964,2700,2400,2075};
 int32_t buff[ADCIn];
 uint16_t num = 0;
 volatile int32_t corr = 0;
 volatile uint16_t distance = 0;
 uint8_t speakerNum = 1;
 unsigned char a, buf[3];
-//volatile int32_t debug1 = 0; 
+volatile int32_t debug1 = 0; 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -124,10 +124,6 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   
-//  for(int i = 0; i < 64; i++) 
-//  {
-//    sine[i] = 2048 + (int16_t)(round(2047.0 * sin((i * 3.1415927) / (64*2.0))));
-//  }
 
   //Включаем первый динамик
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
@@ -143,7 +139,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   
   //Включаем таймер, который отвечает за частоту измерения расстояний
-  HAL_TIM_Base_Start_IT(&htim1);
+  //HAL_TIM_Base_Start_IT(&htim1);
   
   /* USER CODE END 2 */
 
@@ -151,31 +147,64 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      //debug1 = 0;
+//      debug1 = 0;
       if(num==ADCIn)
       {
 //          for(uint16_t c = 0;c<ADCIn;c++)
 //          {
 //              debug1 = -buff[c];
-//              HAL_Delay(10);
+//              HAL_Delay(3);
 //          }
           autocorr(buff,Bark);
-          num++;
+          
+          num=0;
+        
+      
           for( a=0; a<3; a++ ) buf[a] = '0';
           uint8_t sizeoftransmit = 3;
           while( distance>=100 )     { buf[0]++; distance = distance-100; }
           while( distance>=10 )       { buf[1]++; distance = distance-10; }
           buf[2] += distance;
           
-          if(buf[0]=='0')
-          {
-              a--;
-              buf[0] = buf[1];
-              buf[1] = buf[0];
-          }
+//          if(buf[0]=='0')
+//          {
+//              a--;
+//              buf[0] = buf[1];
+//              buf[1] = buf[0];
+//          }
       
-          
+          if (speakerNum==0){HAL_UART_Transmit(&huart1,"s\n", 2, 1000);}
           HAL_UART_Transmit(&huart1,(uint8_t*)buf, a, 1000);
+          HAL_UART_Transmit(&huart1,"\n", 1, 1000);
+          HAL_Delay(10);
+          
+          //Переключаем светодиод для индикации следующего замера
+          HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
+        
+          speakerNum++;
+          if (speakerNum > 2){speakerNum = 0;}
+        
+          //Включаем необходимый динамик
+          switch(speakerNum)
+          {
+          case 0:
+              HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
+              break;
+          case 1:
+              HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+              break;
+          case 2:
+              HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+              break;
+          default :
+              break;
+          }
+       
+          
+          //Повторно запускаем DMA
+          HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, BigFKNmas, DAC_ALIGN_12B_R);
+          //Повторно запускаем ADC
+          HAL_ADC_Start_IT(&hadc1);
       }
     /* USER CODE END WHILE */
 
@@ -648,13 +677,13 @@ void autocorr(int32_t *mas1,const uint32_t *mas2)
             sdvig = i+t;
             if(sdvig<ADCIn)
             {
-            vnutr=vnutr+(-mas1[sdvig])*((int16_t)mas2[i]-2048); 
+            vnutr=vnutr+(-mas1[sdvig])*((int16_t)mas2[i]-1736); 
             }
         }
         corr = vnutr;
         if(corr>maxcorr){maxcorr=corr;ans=t;}
     }
-    distance=(ans*33/16);
+    distance=round((ans*33/16)*0.8);
 }
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
@@ -664,7 +693,7 @@ if(hadc->Instance == ADC1) //check if the interrupt comes from ACD1
             //Заполняем массив значениями с микрофона
             if(num<(ADCIn))
             {
-                buff[num]=(HAL_ADC_GetValue(&hadc1)-2048);
+                buff[num]=(HAL_ADC_GetValue(&hadc1)-2348);
                 num++;
             }
             else
@@ -684,34 +713,35 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance==TIM1)
     {
-       num=0;
-        
-       //Переключаем светодиод для индикации следующего замера
-       HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
-        
-       //Включаем необходимый динамик
-       switch(speakerNum)
-       {
-       case 0:
-           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
-           break;
-       case 1:
-           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
-           break;
-       case 2:
-           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
-           break;
-       default :
-           break;
-       }
-       
-       speakerNum++;
-       if (speakerNum > 2){speakerNum = 0;}
-        
-       //Повторно запускаем DMA
-       HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, BigFKNmas, DAC_ALIGN_12B_R);
-       //Повторно запускаем ADC
-       HAL_ADC_Start_IT(&hadc1);
+//       num=0;
+//        
+//       //Переключаем светодиод для индикации следующего замера
+//       HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
+//        
+//       //Включаем необходимый динамик
+//       switch(speakerNum)
+//       {
+//       case 0:
+//           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
+//           break;
+//       case 1:
+//           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+//           break;
+//       case 2:
+//           HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+//           break;
+//       default :
+//           break;
+//       }
+//       
+//       //speakerNum++;
+//       speakerNum=0;
+//       if (speakerNum > 2){speakerNum = 0;}
+//        
+//       //Повторно запускаем DMA
+//       HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, (uint32_t*)Bark, BigFKNmas, DAC_ALIGN_12B_R);
+//       //Повторно запускаем ADC
+//       HAL_ADC_Start_IT(&hadc1);
     }
 }
 /* USER CODE END 4 */
