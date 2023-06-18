@@ -2,7 +2,7 @@ clear, clc, close all
 
 load('BarkerCodes.mat');
 % кодируемая последовательность
-code = barker13;
+code = barker7;
 % количество отсчетов одного периода синуса
 m = 32;
 % длительность импульса в периодах синусойды
@@ -66,4 +66,39 @@ stem(time, autocorr,'.',"black",'LineWidth',0.5);
 xlabel('Смещение');
 ylabel('Автокорреляция');
 title('Функция автокорреляции');
+grid on;
+
+% Чтение отчетов принятого микрофоном сигнала
+% Указываем путь к текстовому файлу
+file_path = 'bpskADC.txt';
+
+% Открываем текстовый файл для чтения
+fileID = fopen(file_path, 'r');
+
+% Чтение данных из текстового файла
+dataadc = fscanf(fileID, '%f');
+dataadc = (dataadc-mean(dataadc))./mean(dataadc);
+% Закрываем файл
+fclose(fileID);
+
+% Создаем вектор времени для оси X
+tsadc = 1:numel(dataadc);
+tstime = 0 : 1/fs : (length(dataadc)/fs-1/fs);
+% Построение графика
+figure;
+plot(tstime, dataadc,'black','LineWidth',1);
+xlabel('Время, сек');
+ylabel('Амплитуда');
+title('График сигнала снятого с АЦП');
+grid on;
+
+crosscorr = Crosscorr(dataadc,x);
+
+% Построение графика автокорреляционной функции
+figure;
+stem(tsadc, crosscorr,'.',"black",'LineWidth',0.5);
+xlabel('Смещение');
+ylabel('Корреляция');
+ylim([-1 1]);
+title('Функция корреляции');
 grid on;
