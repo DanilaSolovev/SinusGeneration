@@ -2,7 +2,7 @@ clear, clc, close all
 
 load('BarkerCodes.mat');
 % кодируемая последовательность
-code = barker7;
+code = barker11;
 % количество отсчетов одного периода синуса
 m = 32;
 % длительность импульса в периодах синусойды
@@ -44,6 +44,7 @@ fprintf(fid, 'Значение ARR (при частоте тактировани
 fprintf(fid, 'Количество элементов в массиве: %d \n\n', length(x));
 % запись отсчетов для 12 разрядного DAC в текстовый файл
 dlmwrite(filename, round(1736*x)+1736,'-append', 'delimiter', ',');
+%dlmwrite(filename, round(500*x)+(4000-500),'-append', 'delimiter', ',');
 fclose(fid);
 
 % построение графиков
@@ -86,8 +87,8 @@ tsadc = 1:numel(dataadc);
 tstime = 0 : 1/fs : (length(dataadc)/fs-1/fs);
 % Построение графика
 figure;
-plot(tstime, dataadc,'black','LineWidth',1);
-xlabel('Время, сек');
+plot(tsadc, dataadc,'black','LineWidth',1);
+xlabel('Отсчеты');
 ylabel('Амплитуда');
 title('График сигнала снятого с АЦП');
 grid on;
