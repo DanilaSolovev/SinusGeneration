@@ -2,7 +2,7 @@ clear, clc, close all
 
 load('BarkerCodes.mat');
 % кодируемая последовательность
-code = barker7;
+code = barker5;
 % количество отсчетов одного периода синуса
 m = 32;
 % длительность импульса в периодах синусойды
@@ -87,8 +87,8 @@ tsadc = 1:numel(dataadc);
 tstime = 0 : 1/fs : (length(dataadc)/fs-1/fs);
 % Построение графика
 figure;
-plot(tsadc, dataadc,'black','LineWidth',1);
-xlabel('Отсчеты');
+plot(tstime, dataadc,'black','LineWidth',1);
+xlabel('Время, сек');
 ylabel('Амплитуда');
 title('График сигнала снятого с АЦП');
 grid on;
